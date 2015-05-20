@@ -1,0 +1,530 @@
+This document will walk all the various rails command lines
+used to create this application.
+
+Conventions:
+
+Anything in '< >' are to be filled out with a use case specific value
+
+Command line entries like 'rails' and 'rake' commands
+are prefixed with 'T> ' or 'A> '.
+
+'T> ' is for a template using '< >'
+'A> ' is for actual command without templates but actual values.
+
+Comments are prefixed with '#'
+
+These are done in order from top to bottom.
+
+#######################
+
+# When creating your new project
+
+ T> rails new <project name> 
+ A> rails new organ_direct_01
+
+#######################
+
+# Create a set of static pages, home, help, about
+# "CamelCaseName" is the name that prefixes the view with a directory
+# like "views/camelcasename/page1.html.erb"
+# like "views/camelcasename/page2.html.erb"
+# and "controllers/camel_case_name_controller.rb"
+
+ T> rails g controller <CamelCaseName> <page1> <page2> <page3>
+ A> rails g controller Statics home help about
+
+#######################
+
+# Adding Person with firstName and lastName strings.
+# full scaffold
+# type of resource be the "ResourceName" holding multiple fields
+# the "ResourceName" should be singular
+#
+
+ T>rails g scaffold <ResourceName>> <field1>:<type1> <field2>:<type2>
+ A>rails g scaffold Person firstName:text lastName:text
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Adding RoleType with roleName 
+# full scaffold
+# type of resource be the "ResourceName" holding multiple fields
+# the "ResourceName" should be singular
+#
+
+ T>rails g scaffold <ResourceName>> <field1>:<type1> <field2>:<type2>
+ A>rails g scaffold RoleType roleName:string 
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Creating the mapping between the RoleTypes and Person.
+# The relationship is has_many, through in both directions with
+# the JOIN table in the middle.
+
+# Example below shows 
+
+ T>rails g model <JoinTableName> <Resource1>:belongs_to <Resource2>:belongs_to
+ A>rails g model PersonRoleType person:belongs_to role_type:belongs_to
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Adding Address information 
+# full scaffold
+# type of resource be the "ResourceName" holding multiple fields
+# the "ResourceName" should be singular
+#
+
+ T>rails g scaffold <ResourceName>> <field1>:<type1> <field2>:<type2>
+ A>rails g scaffold Address streetInfo:text address1:text address2:text city:string state:string zip:string 
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+Added "Devise" user login support. Followed this video:
+https://www.youtube.com/watch?v=zJYuLebl-Js
+
+#######################
+
+# Creating the mapping between the Address and Person.
+# The relationship is has_many, through in one direction and has_one, through in the other
+# Addresses can have many People, Each Person can only have zero or one Address
+# the JOIN table in the middle.
+
+# Example below shows 
+
+ T>rails g model <JoinTableName> <Resource1>:belongs_to <Resource2>:belongs_to
+ A>rails g model AddressPerson person:belongs_to address:belongs_to
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+NOTES:
+Person -> has a single address
+
+Address -> has N possible people
+
+AddressToPerson -> maps the relationship for person to address
+    
+    Person Needs:
+        has_one :address_person
+        has_one :address, through: :address_person
+        accepts_nested_attributes_for :address_person
+
+    Address Needs:
+        has_many :address_people
+        has_many :people, through: :address_people
+
+    AddressPerson Needs:
+        belongs_to :person
+        belongs_to :address
+
+In Controller
+ 
+     we need to have to build an initial address_to_person:
+# originally
+   def new
+    @person = Person.new
+  end
+
+# becomes
+   def new
+    @person = Person.new
+    @address_person = @person.build_address_person
+  end
+
+
+In View
+
+ <div class="field">
+     <%= f.label :address %><br>
+     <%= f.fields_for :address_person do |ap| %>
+         <%= ap.collection_select(:address_id, Address.all, :id, :streetInfo, { :selected => selectValue, include_blank: true }, { } ) %>
+     <% end %>
+  </div>
+
+   
+
+#######################
+
+# Adding PhoneNumber information 
+# full scaffold
+# type of resource be the "ResourceName" holding multiple fields
+# the "ResourceName" should be singular
+#
+
+ T>rails g scaffold <ResourceName>> <field1>:<type1> <field2>:<type2>
+ A>rails g scaffold PhoneNumber number:string 
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Creating the mapping between the PhoneNumber and Person.
+# The relationship is has_many, through in one direction and has_one, through in the other
+# PhoneNumber can have many People, Each Person can only have zero or one PhoneNumber
+# the JOIN table in the middle.
+
+# Example below shows 
+
+ T>rails g model <JoinTableName> <Resource1>:belongs_to <Resource2>:belongs_to
+ A>rails g model PhoneNumberPerson person:belongs_to phone_number:belongs_to
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+
+#######################
+
+# Adding Email information 
+# full scaffold
+# type of resource be the "ResourceName" holding multiple fields
+# the "ResourceName" should be singular
+#
+
+ T>rails g scaffold <ResourceName>> <field1>:<type1> <field2>:<type2>
+ A>rails g scaffold Email email:string 
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Creating the mapping between the Email and Person.
+# The relationship is has_many, through in one direction and has_one, through in the other
+# Email can have many People, Each Person can only have zero or one Email
+# the JOIN table in the middle.
+
+# Example below shows 
+
+ T>rails g model <JoinTableName> <Resource1>:belongs_to <Resource2>:belongs_to
+ A>rails g model EmailPerson person:belongs_to email:belongs_to
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Adding GradeLevel information 
+# full scaffold
+# type of resource be the "ResourceName" holding multiple fields
+# the "ResourceName" should be singular
+#
+
+ T>rails g scaffold <ResourceName>> <field1>:<type1> <field2>:<type2>
+ A>rails g scaffold GradeLevel number:integer name:string 
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Creating the mapping between the GradeLevel and Person { requirement is RoleType is Teacher }
+# The relationship is has_one, through in both directions 
+# GradeLevel can have a single Person, Each Person can only have zero or one GradeLevel
+# the JOIN table in the middle.
+
+# Example below shows 
+
+ T>rails g model <JoinTableName> <Resource1>:belongs_to <Resource2>:belongs_to
+ A>rails g model GradeLevelTeacher grade_level:belongs_to person:belongs_to
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Adding NameTitle information 
+# full scaffold
+# type of resource be the "ResourceName" holding multiple fields
+# the "ResourceName" should be singular
+#
+
+ T>rails g scaffold <ResourceName>> <field1>:<type1> <field2>:<type2>
+ A>rails g scaffold NameTitle title:string 
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Creating the mapping between the NameTitle and Person 
+# The relationship is has_one, through from Person to NameTitle 
+# Each Person can only have zero or one NameTitle
+# the JOIN table in the middle.
+
+# Example below shows 
+
+ T>rails g model <JoinTableName> <Resource1>:belongs_to <Resource2>:belongs_to
+ A>rails g model NameTitlePerson name_title:belongs_to person:belongs_to
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Adding Extension information 
+# full scaffold
+# type of resource be the "ResourceName" holding multiple fields
+# the "ResourceName" should be singular
+#
+
+ T>rails g scaffold <ResourceName>> <field1>:<type1> <field2>:<type2>
+ A>rails g scaffold Extension ext:integer 
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Creating the mapping between the Extension and Person (is Teacher) 
+# The relationship is has_one, through from Person to Extension 
+# Each Person can only have zero or one Extension
+# the JOIN table in the middle.
+
+# Example below shows 
+
+ T>rails g model <JoinTableName> <Resource1>:belongs_to <Resource2>:belongs_to
+ A>rails g model ExtensionPerson extension:belongs_to person:belongs_to
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Adding Room information 
+# full scaffold
+# type of resource be the "ResourceName" holding multiple fields
+# the "ResourceName" should be singular
+#
+
+ T>rails g scaffold <ResourceName>> <field1>:<type1> <field2>:<type2>
+ A>rails g scaffold Room room:string 
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Adding Position information 
+# full scaffold
+# type of resource be the "ResourceName" holding multiple fields
+# the "ResourceName" should be singular
+#
+
+ T>rails g scaffold <ResourceName>> <field1>:<type1> <field2>:<type2>
+ A>rails g scaffold Position name:string 
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Adding Department information 
+# full scaffold
+# type of resource be the "ResourceName" holding multiple fields
+# the "ResourceName" should be singular
+#
+
+ T>rails g scaffold <ResourceName>> <field1>:<type1> <field2>:<type2>
+ A>rails g scaffold Department name:string 
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Adding Gender information 
+# full scaffold
+# type of resource be the "ResourceName" holding multiple fields
+# the "ResourceName" should be singular
+#
+
+ T>rails g scaffold <ResourceName>> <field1>:<type1> <field2>:<type2>
+ A>rails g scaffold Gender gender:string 
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Adding StudentClass information 
+# full scaffold
+# type of resource be the "ResourceName" holding multiple fields
+# the "ResourceName" should be singular
+#
+
+ T>rails g scaffold <ResourceName>> <field1>:<type1> <field2>:<type2>
+ A>rails g scaffold StudentClass grade_level_teacher:belongs_to 
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Creating the mapping between the Student_Class and Person (is Student) 
+# The relationship is Student_Class has many Person (Student) 
+# The relationship is Person (Student) has_one Student_Class
+# the JOIN table in the middle.
+
+# Example below shows 
+
+ T>rails g model <JoinTableName> <Resource1>:belongs_to <Resource2>:belongs_to
+ A>rails g model ClassMember student_class:belongs_to person:belongs_to
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#
+
+#######################
+
+# Adding Family information 
+# full scaffold
+# type of resource be the "ResourceName" holding multiple fields
+# the "ResourceName" should be singular
+#
+
+ T>rails g scaffold <ResourceName>> <field1>:<type1> <field2>:<type2>
+ A>rails g scaffold Family familyName:string 
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Creating the mapping between the Room and Person (is Teacher) 
+# The relationship is has_one, through from Person to Room 
+# Each Person can only have zero or one Room
+# the JOIN table in the middle.
+
+# Example below shows 
+
+ T>rails g model <JoinTableName> <Resource1>:belongs_to <Resource2>:belongs_to
+ A>rails g model RoomPerson room:belongs_to person:belongs_to
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Creating the mapping between the Department and Person (is Staff) 
+# The relationship is has_one, through from Person to Department 
+# Each Person can only have zero or one Department
+# the JOIN table in the middle.
+
+# Example below shows 
+
+ T>rails g model <JoinTableName> <Resource1>:belongs_to <Resource2>:belongs_to
+ A>rails g model DepartmentPerson department:belongs_to person:belongs_to
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Creating the mapping between the Position and Person (is Staff) 
+# The relationship is has_one, through from Person to Position 
+# Each Person can only have zero or one Position
+# the JOIN table in the middle.
+
+# Example below shows 
+
+ T>rails g model <JoinTableName> <Resource1>:belongs_to <Resource2>:belongs_to
+ A>rails g model PositionPerson position:belongs_to person:belongs_to
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Creating the mapping between Gender and Person (is Student) 
+# The relationship is has_one, through from Person to Gender 
+# the JOIN table in the middle.
+
+# Example below shows 
+
+ T>rails g model <JoinTableName> <Resource1>:belongs_to <Resource2>:belongs_to
+ A>rails g model GenderPerson gender:belongs_to person:belongs_to
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Creating the mapping between the Family and Person { requirement is RoleType is Parent }
+# A Family has_many Person (Parent)
+# A Person has_one Family
+# the JOIN table in the middle.
+
+# Example below shows 
+
+ T>rails g model <JoinTableName> <Resource1>:belongs_to <Resource2>:belongs_to
+ A>rails g model FamilyParent family:belongs_to person:belongs_to
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+#######################
+
+# Creating the mapping between the Family and Person { requirement is RoleType is Children }
+# A Family has_many Person (Children)
+# A Person has_one Family
+# the JOIN table in the middle.
+
+# Example below shows 
+
+ T>rails g model <JoinTableName> <Resource1>:belongs_to <Resource2>:belongs_to
+ A>rails g model FamilyChild family:belongs_to child:belongs_to
+
+# Due to generationing new migrations we need to run "bin/rake db:migrate RAILS_ENV=development"
+
+ A>bin/rake db:migrate RAILS_ENV=development
+
+
+
+
+
+
+
+
+
+
